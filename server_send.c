@@ -46,8 +46,9 @@ int main()
   int s = accept(ss, (struct sockaddr *)&client_addr, &len);
   while (1)
   {
-    auto m = sox_read(ft, buf, n);
+    int m = sox_read(ft, buf, n);
     assert(m == n);
+
     write(s, buf, n);
   }
   sox_close(ft);
