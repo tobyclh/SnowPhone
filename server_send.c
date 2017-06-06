@@ -8,7 +8,7 @@
 #include <netinet/tcp.h>
 #include <sox.h>
 #include <sys/socket.h>
-
+#include <assert.h>
 int setup_socket(int port)
 {
   int ss = socket(PF_INET, SOCK_STREAM, 0);
@@ -40,15 +40,15 @@ int main()
 
   struct sockaddr_in client_addr;
   socklen_t len = sizeof(struct sockaddr_in);
-  scanf("%d", &myInt);
-  int ss = setup_socket()
+  int port;
+  scanf("%d", &port);
+  int ss = setup_socket(port);
   int s = accept(ss, (struct sockaddr *)&client_addr, &len);
-  data[0] = 'h';
   while (1)
   {
     auto m = sox_read(ft, buf, n);
     assert(m == n);
-    write(s, data, N);
+    write(s, buf, n);
   }
   sox_close(ft);
   sox_quit();
