@@ -55,6 +55,7 @@ int main()
     image_window win;
     cv::Mat _nose_mat = cv::imread(nose_image, CV_LOAD_IMAGE_COLOR);
     cv::Mat nose_mat;
+    cv::Size size(200, 200);
 
     // Load face detection and pose estimation models.
     frontal_face_detector detector = get_frontal_face_detector();
