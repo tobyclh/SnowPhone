@@ -12,22 +12,24 @@
 
 #include <pthread.h>
 
-char *rec_command = "rec -t raw -b 16 -c 2 -e s -r 44100 -";
+char *rec_command = "rec -t raw -b 16 -c 2 -e s -r 44100 - &";
 char *play_command = "play -t raw -b 16 -c 2 -e s -r 44100 -";
 
 FILE *rec_fp, *play_fp;
 
-int N = 50; // 適切な値を設定
+int N = 32; // 適切な値を設定
 int s;
 
-unsigned char *buf;
+unsigned char *rec_data;
+unsigned char *play_data;
+
 
 void *rec_send(void *arg) {
   while (1) {
-    fread(buf, 1, N, rec_fp);
+    fread(rec_data, 1, N, rec_fp);
     //fprintf(stderr, "fread complete\n");
 
-    write(s, buf, N);
+    write(s, rec_data, N);
     //fprintf(stderr, "write complete\n");
   }
 
@@ -36,10 +38,10 @@ void *rec_send(void *arg) {
 
 void *recv_play(void *arg) {
   while (1) {
-    read(s, buf, N);
+    read(s, play_data, N);
     //fprintf(stderr, "read complete\n");
 
-    fwrite(buf, 1, N, play_fp);
+    fwrite(play_data, 1, N, play_fp);
     //fprintf(stderr, "fwrite complete\n");
   }
 
@@ -62,10 +64,12 @@ int main(int argc, char **argv) {
 
   unsigned char send_data[N];
   unsigned char recv_data[N];
-  buf = calloc(N, sizeof(unsigned char));
 
   memset(send_data, 0, sizeof(send_data));
   memset(recv_data, 0, sizeof(recv_data));
+
+  rec_data = calloc(N, sizeof(unsigned char));
+  play_data = calloc(N, sizeof(unsigned char));
 
   int ss;
   if (is_server) {
@@ -181,11 +185,14 @@ int main(int argc, char **argv) {
     fwrite(buf, 1, N, play_fp);
     fprintf(stderr, "fwrite complete\n");
 */
-
+/*
     memset(send_data, 0, sizeof(send_data));
     memset(recv_data, 0, sizeof(recv_data));
-    memset(buf, 0, sizeof(recv_data));
+    memset(rec_data, 0, sizeof(recv_data));
+    memset(play_data, 0, sizeof(recv_data));
+    */
   }
+
 
   close(s);
 
