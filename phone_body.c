@@ -12,12 +12,12 @@
 
 #include <pthread.h>
 
-char *rec_command = "rec -t raw -b 16 -c 2 -e s -r 44100 - &";
+char *rec_command = "rec -t raw -b 16 -c 2 -e s -r 44100 -";
 char *play_command = "play -t raw -b 16 -c 2 -e s -r 44100 -";
 
 FILE *rec_fp, *play_fp;
 
-int N = 32; // 適切な値を設定
+int N = 100; // 適切な値を設定
 int s;
 
 unsigned char *rec_data;
@@ -61,12 +61,6 @@ int main(int argc, char **argv) {
     server_ip_address = "127.0.0.1";
   }
   char *server_port_number = argv[2];
-
-  unsigned char send_data[N];
-  unsigned char recv_data[N];
-
-  memset(send_data, 0, sizeof(send_data));
-  memset(recv_data, 0, sizeof(recv_data));
 
   rec_data = calloc(N, sizeof(unsigned char));
   play_data = calloc(N, sizeof(unsigned char));
