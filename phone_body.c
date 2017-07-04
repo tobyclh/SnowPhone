@@ -12,13 +12,13 @@
 
 #include <pthread.h>
 
-char *rec_command = "rec -t raw -b 16 -c 2 -e s -r 44100 -q -";
-char *play_command = "play -t raw -b 16 -c 2 -e s -r 44100 -q -";
+char *rec_command = "rec -t raw -b 16 -c 2 -e s -r 44100 - bandpass 1850 3100";
+char *play_command = "play -t raw -b 16 -c 2 -e s -r 44100 - bandpass 1850 3100";
 
 FILE *rec_fp, *play_fp;
 FILE *video_stream_fp;
 
-int N = 100; // 適切な値を設定
+int N = 1024; // 適切な値を設定
 int s;
 struct sockaddr_in addr;
 
