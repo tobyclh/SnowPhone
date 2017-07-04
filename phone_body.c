@@ -12,25 +12,29 @@
 
 #include <pthread.h>
 
-char *rec_command = "rec -t raw -b 16 -c 2 -e s -r 44100 -";
-char *play_command = "play -t raw -b 16 -c 2 -e s -r 44100 -";
+char *rec_command = "rec -t raw -b 16 -c 2 -e s -r 44100 -q -";
+char *play_command = "play -t raw -b 16 -c 2 -e s -r 44100 -q -";
 
 FILE *rec_fp, *play_fp;
+FILE *video_stream_fp;
 
 int N = 100; // 適切な値を設定
 int s;
+struct sockaddr_in addr;
 
 unsigned char *rec_data;
 unsigned char *play_data;
 
+char *video_stream_command = "";
 
 void *rec_send(void *arg) {
   while (1) {
-    fread(rec_data, 1, N, rec_fp);
-    //fprintf(stderr, "fread complete\n");
+    fread(rec_data, 1, N, rec_fp); // read from rec_fp to rec_data
+    // read(rec_fp, rec_data, N); // read from rec_fp to rec_data
+    // fprintf(stderr, "fread complete\n");
 
-    write(s, rec_data, N);
-    //fprintf(stderr, "write complete\n");
+    write(s, rec_data, N); // write to s from rec_data
+    // fprintf(stderr, "write complete\n");
   }
 
   return arg;
@@ -38,11 +42,26 @@ void *rec_send(void *arg) {
 
 void *recv_play(void *arg) {
   while (1) {
-    read(s, play_data, N);
-    //fprintf(stderr, "read complete\n");
+    read(s, play_data, N); // read from s to play_data
+    // fprintf(stderr, "read complete\n");
 
-    fwrite(play_data, 1, N, play_fp);
-    //fprintf(stderr, "fwrite complete\n");
+    fwrite(play_data, 1, N, play_fp); // write to play_fp from play_data
+    // write(play_fp, play_data, N); // write to play_fp from play_data
+    // fprintf(stderr, "fwrite complete\n");
+  }
+
+  return arg;
+}
+
+void *get_stdin(void *arg) {
+  int m = 1000;
+  char *control = calloc(m, sizeof(char *));
+  while (1) {
+    scanf("%s", control);
+    if (strncmp(control, "finish", 6) == 0) {
+      return arg;
+    }
+    memset(control, 0, m);
   }
 
   return arg;
@@ -72,7 +91,7 @@ int main(int argc, char **argv) {
       perror("socket ss");
       exit(1);
     }
-    struct sockaddr_in addr;
+
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = INADDR_ANY;
     addr.sin_port = htons(atoi(server_port_number));
@@ -101,7 +120,6 @@ int main(int argc, char **argv) {
       exit(1);
     }
 
-    struct sockaddr_in addr;
     addr.sin_family = AF_INET;
 
     if (inet_aton(server_ip_address, &addr.sin_addr) == 0) {
@@ -116,6 +134,15 @@ int main(int argc, char **argv) {
       exit(1);
     }
   }
+  fprintf(stderr, "OK\n");
+  video_stream_command = calloc(100, sizeof(unsigned char *));
+
+  if (is_server) {
+    sprintf(video_stream_command, "./server %d", atoi(server_port_number) + 1);
+  } else {
+    sprintf(video_stream_command, "./client %s %d", server_ip_address, atoi(server_port_number) + 1);
+  }
+  fprintf(stderr, "%s\n", video_stream_command);
 
   if ((rec_fp = popen(rec_command, "r")) == NULL) {
     fprintf(stderr, "recコマンドのオープンに失敗しました.\n");
@@ -126,8 +153,13 @@ int main(int argc, char **argv) {
     exit(EXIT_FAILURE);
   }
 
+  if ((video_stream_fp = popen(video_stream_command, "r")) == NULL) {
+    fprintf(stderr, "video streamコマンドのオープンに失敗しました.\n");
+    exit(EXIT_FAILURE);
+  }
+
   pid_t p_pid;
-  pthread_t control_thread_id, rec_thread_id, play_thread_id;
+  pthread_t rec_thread_id, play_thread_id, control_thread_id;
   int status;
   void *result;
 
@@ -149,44 +181,20 @@ int main(int argc, char **argv) {
     printf("[%d]thread_id1 = %d\n", p_pid, play_thread_id);
   }
 
+  status = pthread_create(&control_thread_id, NULL, get_stdin, (void *)NULL);
+  if (status != 0){
+    fprintf(stderr, "pthread_create : %s", strerror(status));
+  }
+  else{
+    printf("[%d]thread_id1 = %d\n", p_pid, control_thread_id);
+  }
+
+  pthread_join(control_thread_id, &result);
+  printf("[%d]thread_id1 = %d end\n", p_pid, control_thread_id);
   pthread_join(rec_thread_id, &result);
   printf("[%d]thread_id1 = %d end\n", p_pid, rec_thread_id);
   pthread_join(play_thread_id, &result);
   printf("[%d]thread_id2 = %d end\n", p_pid, play_thread_id);
-
-
-
-  while (0) {
-    /*
-    scanf("%s", send_data);
-    if (strncmp(send_data, "finish", 6) == 0) {
-      break;
-    }
-    */
-
-    /*
-    fread(buf, 1, N, rec_fp);
-    fprintf(stderr, "fread complete\n");
-
-    write(s, buf, N);
-    fprintf(stderr, "write complete\n");
-    */
-
-    /*
-    read(s, buf, N);
-    fprintf(stderr, "read complete\n");
-
-    fwrite(buf, 1, N, play_fp);
-    fprintf(stderr, "fwrite complete\n");
-*/
-/*
-    memset(send_data, 0, sizeof(send_data));
-    memset(recv_data, 0, sizeof(recv_data));
-    memset(rec_data, 0, sizeof(recv_data));
-    memset(play_data, 0, sizeof(recv_data));
-    */
-  }
-
 
   close(s);
 
