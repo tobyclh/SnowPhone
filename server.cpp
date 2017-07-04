@@ -56,6 +56,7 @@ int main(int argc, char **argv)
     {
         perror("Can't bind() socket");
         exit(1);
+<<<<<<< HEAD
     }
 
     //Listening
@@ -82,6 +83,41 @@ int main(int argc, char **argv)
 
         //pthread_join(thread_id,NULL);
     }
+=======
+    }
+
+    //Listening
+    listen(localSocket, 3);
+
+    std::cout << "Waiting for connections...\n"
+              << "Server Port:" << port << std::endl;
+    while (1)
+    {
+        //if (remoteSocket < 0) {
+        //    perror("accept failed!");
+        //    exit(1);
+        //}
+
+        remoteSocket = accept(localSocket, (struct sockaddr *)&remoteAddr, (socklen_t *)&addrLen);
+        //std::cout << remoteSocket<< "32"<< std::endl;
+        if (remoteSocket < 0)
+        {
+            perror("accept failed!");
+            exit(1);
+        }
+        std::cout << "Connection accepted" << std::endl;
+        pthread_create(&thread_id, NULL, display, &remoteSocket);
+
+        //pthread_join(thread_id,NULL);
+    }
+
+    //accept connection from an incoming client
+
+    //----------------------------------------------------------
+    //OpenCV Code
+    //----------------------------------------------------------
+
+>>>>>>> face_recognition
     return 0;
 }
 void *display(void *ptr)
@@ -93,16 +129,23 @@ void *display(void *ptr)
     uchar *iptr = img.data;
     int bytes = 0;
     int key;
+<<<<<<< HEAD
     cv::Size size;
+=======
+
+>>>>>>> face_recognition
     namedWindow("CV Video Client", 1);
     char echo_buffer[BUF_LEN];
     while (key != 'q')
     {
         while (bytes > sizeof(int) || bytes == 0)
         {
+<<<<<<< HEAD
             // std::cout << "Sleep"  << std::endl;
             // usleep(100);
             std::cout << "recv "  << bytes << std::endl;
+=======
+>>>>>>> face_recognition
             bytes = recv(sokt, echo_buffer, BUF_LEN, MSG_DONTWAIT);
         }
         int total_pack = ((int *)echo_buffer)[0];
@@ -111,7 +154,10 @@ void *display(void *ptr)
         char *longbuf = new char[PACK_SIZE * total_pack];
         for (int i = 0; i < total_pack; i++)
         {
+<<<<<<< HEAD
             std::cout << "Waiting for pack" << std::endl;
+=======
+>>>>>>> face_recognition
             bytes = recv(sokt, echo_buffer, PACK_SIZE, MSG_WAITALL);
             if (bytes != PACK_SIZE)
             {
@@ -128,9 +174,12 @@ void *display(void *ptr)
             std::cerr << "decode failure!" << std::endl;
             continue;
         }
+<<<<<<< HEAD
         std::cout << "Showing" << std::endl;
         size = cv::Size(frame.size().width*2, frame.size().height*2);
         cv::resize(frame,frame,size);
+=======
+>>>>>>> face_recognition
         cv::imshow("recv", frame);
         free(longbuf);
 
